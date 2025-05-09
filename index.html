@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="es" class="h-100">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="./bootstrap/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="icon" href="js1.png" sizes="32x32" type="image/png" />
+  <title>Registro de Usuario</title>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+
+  <div class="container bg-white">
+    <header class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom">
+        <img src="js1.png" width="45" height="45">
+        <span class="fs-4"> Registro de Usuario</span>
+    </header>
+  </div>
+
+  <div class="container-md">
+    <div class="row">
+      <div class="col-6 mx-auto">
+        <div class="shadow-lg p-3 mt-5 bg-body rounded">
+          <form id="frmUsuario">
+            <input type="hidden" name="accion" value="saveForm">
+            <div class="mb-3">
+              <label for="nombreCompleto">Nombre completo</label>
+              <input type="text" name="nombreCompleto" id="nombreCompleto" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <label for="correo">Correo electrónico</label>
+              <input type="email" name="correo" id="correo" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <label for="contrasena">Contraseña</label>
+              <input type="password" name="contrasena" id="contrasena" class="form-control" required />
+            </div>
+            <div class="mb-3">
+              <label for="fechaNacimiento">Fecha de Nacimiento</label>
+              <input type="date" name="fechaNacimiento" id="fechaNacimiento" class="form-control" required />
+            </div>
+            <button id="btnEnviar" type="button" class="btn btn-success">Enviar información</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="usuariosRegistrados" class="container-md mt-5">
+    <h3>Usuarios Registrados</h3>
+    <table id="tablaUsuarios" class="table table-bordered">
+      <thead>
+        <tr>
+          <th>Nombre Completo</th>
+          <th>Correo</th>
+          <th>Fecha de Nacimiento</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    $(document).ready(function () {
+      // Cargar usuarios registrados
+      function cargarUsuarios() {
+        $.ajax({
+          url: 'getUsers.php',
+          type: 'GET',
+          dataType: 'json',
+          success: function (usuarios) {
+            let rows = '';
+            usuarios.forEach(function (usuario) {
+              rows += `<tr>
+                        <td>${usuario.nombreCompleto}</td>
+                        <td>${usuario.correo}</td>
+                        <td>${usuario.fechaNacimiento}</td>
+                        <td><button class="btn btn-danger btnEliminar" data-id="${usuario.id}">Eliminar</button></td>
+                      </tr>`;
+            });
+            $('#tablaUsuarios tbody').html(rows);
+          }
+        });
+      }
+
+      // Llamar la función para cargar los usuarios al cargar la página
+      cargarUsuarios();
+
+      // Enviar datos del formulario
+$('#btnEnviar').on('click', function () {
+  let nombre = $('#nombreCompleto').val().trim();
+  let correo = $('#correo').val().trim();
+  let contrasena = $('#contrasena').val();
+  let fecha = $('#fechaNacimiento').val();
+
+  const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (nombre === '' || correo === '' || contrasena === '' || fecha === '') {
+    alert('Todos los campos son obligatorios.');
+    return;
+  }
+
+  if (!correoValido.test(correo)) {
+    alert('El correo no tiene un formato válido.');
+    return;
+  }
+
+  if (contrasena.length < 6) {
+    alert('La contraseña debe tener al menos 6 caracteres.');
+    return;
+  }
+
+  const fechaNacimiento = new Date(fecha);
+  const hoy = new Date();
+  const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
+  const mes = hoy.getMonth() - fechaNacimiento.getMonth();
+  const dia = hoy.getDate() - fechaNacimiento.getDate();
+
+  // Verifica si la fecha es futura
+  if (fechaNacimiento > hoy) {
+    alert('La fecha de nacimiento no puede ser en el futuro.');
+    return;
+  }
+
+  // Verifica si es mayor de 18 años
+  if (edad < 12 || (edad === 12 && (mes < 0 || (mes === 0 && dia < 0)))) {
+    alert('Debes tener al menos 12 años para registrarte.');
+    return;
+  }
+
+  let formData = $('#frmUsuario').serialize();
+  $.ajax({
+    url: 'functions.php',
+    type: 'POST',
+    data: formData,
+    dataType: 'json',
+    success: function (response) {
+      if (response.status === 'success') {
+        alert('Datos guardados correctamente');
+        $('#frmUsuario')[0].reset();
+        cargarUsuarios();
+      } else {
+        alert('Error: ' + response.message);
+      }
+    },
+    error: function () {
+      alert('Error en la conexión al servidor');
+    }
+  });
+});
+
+
+
+      // Eliminar usuario
+      $(document).on('click', '.btnEliminar', function () {
+        let usuarioId = $(this).data('id');
+        $.ajax({
+          url: 'deleteUser.php',
+          type: 'POST',
+          data: { id: usuarioId },
+          success: function () {
+            cargarUsuarios(); // Recargar la lista de usuarios después de eliminar uno
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
