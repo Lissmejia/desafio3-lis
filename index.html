@@ -7,6 +7,7 @@
   <link rel="icon" href="js1.png" sizes="32x32" type="image/png" />
   <title>Registro de Usuario</title>
   <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.6/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4Q6Gf2aSP4eDXB8Miphtr37CMZZQ5oXLH2yaXMJ2w8e2ZtHTl7GptT4jmndRuHDT" crossorigin="anonymous">
 </head>
 <body>
 
@@ -23,6 +24,7 @@
         <div class="shadow-lg p-3 mt-5 bg-body rounded">
           <form id="frmUsuario">
             <input type="hidden" name="accion" value="saveForm">
+            <input type="hidden" name="usuarioId" id="usuarioId" value="">
             <div class="mb-3">
               <label for="nombreCompleto">Nombre completo</label>
               <input type="text" name="nombreCompleto" id="nombreCompleto" class="form-control" required />
@@ -61,110 +63,6 @@
     </table>
   </div>
 
-  <script>
-    $(document).ready(function () {
-      // Cargar usuarios registrados
-      function cargarUsuarios() {
-        $.ajax({
-          url: 'getUsers.php',
-          type: 'GET',
-          dataType: 'json',
-          success: function (usuarios) {
-            let rows = '';
-            usuarios.forEach(function (usuario) {
-              rows += `<tr>
-                        <td>${usuario.nombreCompleto}</td>
-                        <td>${usuario.correo}</td>
-                        <td>${usuario.fechaNacimiento}</td>
-                        <td><button class="btn btn-danger btnEliminar" data-id="${usuario.id}">Eliminar</button></td>
-                      </tr>`;
-            });
-            $('#tablaUsuarios tbody').html(rows);
-          }
-        });
-      }
-
-      // Llamar la función para cargar los usuarios al cargar la página
-      cargarUsuarios();
-
-      // Enviar datos del formulario
-$('#btnEnviar').on('click', function () {
-  let nombre = $('#nombreCompleto').val().trim();
-  let correo = $('#correo').val().trim();
-  let contrasena = $('#contrasena').val();
-  let fecha = $('#fechaNacimiento').val();
-
-  const correoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  if (nombre === '' || correo === '' || contrasena === '' || fecha === '') {
-    alert('Todos los campos son obligatorios.');
-    return;
-  }
-
-  if (!correoValido.test(correo)) {
-    alert('El correo no tiene un formato válido.');
-    return;
-  }
-
-  if (contrasena.length < 6) {
-    alert('La contraseña debe tener al menos 6 caracteres.');
-    return;
-  }
-
-  const fechaNacimiento = new Date(fecha);
-  const hoy = new Date();
-  const edad = hoy.getFullYear() - fechaNacimiento.getFullYear();
-  const mes = hoy.getMonth() - fechaNacimiento.getMonth();
-  const dia = hoy.getDate() - fechaNacimiento.getDate();
-
-  // Verifica si la fecha es futura
-  if (fechaNacimiento > hoy) {
-    alert('La fecha de nacimiento no puede ser en el futuro.');
-    return;
-  }
-
-  // Verifica si es mayor de 18 años
-  if (edad < 12 || (edad === 12 && (mes < 0 || (mes === 0 && dia < 0)))) {
-    alert('Debes tener al menos 12 años para registrarte.');
-    return;
-  }
-
-  let formData = $('#frmUsuario').serialize();
-  $.ajax({
-    url: 'functions.php',
-    type: 'POST',
-    data: formData,
-    dataType: 'json',
-    success: function (response) {
-      if (response.status === 'success') {
-        alert('Datos guardados correctamente');
-        $('#frmUsuario')[0].reset();
-        cargarUsuarios();
-      } else {
-        alert('Error: ' + response.message);
-      }
-    },
-    error: function () {
-      alert('Error en la conexión al servidor');
-    }
-  });
-});
-
-
-
-      // Eliminar usuario
-      $(document).on('click', '.btnEliminar', function () {
-        let usuarioId = $(this).data('id');
-        $.ajax({
-          url: 'deleteUser.php',
-          type: 'POST',
-          data: { id: usuarioId },
-          success: function () {
-            cargarUsuarios(); // Recargar la lista de usuarios después de eliminar uno
-          }
-        });
-      });
-    });
-  </script>
+  <script src="./script.js"></script>
 </body>
 </html>

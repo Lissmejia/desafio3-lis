@@ -1,7 +1,9 @@
 <?php
 include "db.php";
 
-$query = "SELECT * FROM usuario";
+header('Content-Type: application/json');
+
+$query = "SELECT id, nombreCompleto, correo, fechaNacimiento FROM usuario";
 $result = mysqli_query($conexion, $query);
 
 $usuarios = [];
